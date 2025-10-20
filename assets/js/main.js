@@ -1,10 +1,12 @@
 import { ROMAN, wireTabs, setActiveTab, saveState, loadState, resetAll } from './store.js';
 import { initPlanning } from './planning.js';
+import { optimize } from './optimizer.js';
 
-// Wire tabs
+// Exposer pour planning.js (le bouton appelle window.ROMAN_optimize)
+window.ROMAN_optimize = optimize;
+
+// Tabs
 wireTabs();
-
-// Landing par défaut
 setActiveTab('Landing');
 
 // Init planner
