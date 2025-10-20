@@ -2,27 +2,110 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Planning Manager</title>
   <style>
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:24px;background:#f8fafc;color:#0f172a}
-    .wrap{max-width:900px;margin:0 auto}
-    .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px}
+    :root { --bg:#f8fafc; --card:#fff; --text:#0f172a; --muted:#475569; --border:#e2e8f0; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:960px;margin:0 auto;padding:16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
     h1{margin:0 0 8px 0}
-    .muted{color:#475569}
+    label{display:block;margin:8px 0 4px 0;color:var(--muted);font-size:14px}
+    input,button,select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:14px}
+    button{cursor:pointer}
+    .row{display:flex;gap:8px}
+    .row>*{flex:1}
+    .muted{color:var(--muted);font-size:13px}
+    .grid{display:grid;gap:12px}
+    @media(min-width:768px){ .grid{grid-template-columns:1fr 2fr} }
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left;font-size:14px}
+    .hide{display:none}
   </style>
 </head>
-<script src="./app.js"></script>
 <body>
   <div class="wrap">
     <h1>Planning Manager</h1>
-    <p class="muted">Site de test publié avec GitHub Pages.</p>
+    <p class="muted">GitHub Pages (statique) + Auth & DB via Supabase.</p>
 
-    <div class="card">
-      <p>Si tu vois cette page en ligne, GitHub Pages fonctionne.</p>
-      <p>URL de ton site : regarde dans Settings → Pages (ou essaie <em>https://ton-pseudo.github.io/planning-manager/</em>).</p>
-    </div>
+    <!-- 0) Porte souple: code d’accès -->
+    <section id="gate" class="card">
+      <h2 style="margin-top:0;font-size:18px">Code d’accès</h2>
+      <div class="row">
+        <input id="accessCode" placeholder="Entrer le code">
+        <button id="enterBtn">Entrer</button>
+      </div>
+      <p class="muted" id="gateMsg"></p>
+    </section>
+
+    <!-- 1) Auth Supabase -->
+    <section id="auth" class="card hide">
+      <h2 style="margin-top:0;font-size:18px">Connexion</h2>
+      <div class="row">
+        <div>
+          <label>Email</label>
+          <input id="email" type="email" placeholder="you@email.com">
+        </div>
+        <div>
+          <label>Mot de passe</label>
+          <input id="password" type="password" placeholder="••••••••">
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="login">Se connecter</button>
+        <button id="signup">Créer un compte</button>
+      </div>
+      <p class="muted" id="authMsg"></p>
+    </section>
+
+    <!-- 2) Application -->
+    <section id="app" class="grid hide">
+      <!-- Colonne gauche -->
+      <div class="card">
+        <h3 style="margin-top:0">Semaine ISO</h3>
+        <div class="row">
+          <input id="weekInput" type="number" min="1" max="53">
+          <input id="yearInput" type="number" min="2024">
+        </div>
+        <button id="refresh" style="margin-top:8px">Afficher</button>
+
+        <hr style="margin:16px 0;border:0;border-top:1px solid var(--border)">
+
+        <h3>Ajouter un shift</h3>
+        <label>Agent (nom complet)</label>
+        <div class="row">
+          <select id="agentSelect"></select>
+          <input id="agentName" placeholder="Ou taper un nouveau nom">
+        </div>
+        <div class="row" style="margin-top:8px">
+          <select id="daySelect"></select>
+          <input id="startTime" type="time" value="09:00">
+          <input id="endTime" type="time" value="17:00">
+        </div>
+        <button id="addShift" style="margin-top:8px">Ajouter</button>
+        <p class="muted" id="formMsg"></p>
+
+        <button id="logout" style="margin-top:16px">Se déconnecter</button>
+      </div>
+
+      <!-- Colonne droite -->
+      <div class="card">
+        <h3 style="margin-top:0">Planning de la semaine</h3>
+        <div class="muted" id="rangeLabel" style="margin-bottom:8px"></div>
+        <table>
+          <thead><tr><th>Jour</th><th>Agent</th><th>Début</th><th>Fin</th><th>Actions</th></tr></thead>
+          <tbody id="planningBody"><tr><td colspan="5" class="muted">Aucun shift.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="muted" style="margin-top:24px">© Roman Inc.</p>
   </div>
+
+  <!-- SDK Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Ton code -->
+  <script src="./app.js"></script>
 </body>
 </html>
-
