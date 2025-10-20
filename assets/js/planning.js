@@ -11,29 +11,18 @@ const UI = {
   mobileBreakpoint: 480 // px
 };
 
-// Palette couleurs (pastel harmonisé)
+// Palette harmonisée (10 tâches)
 const TASK_COLORS = {
-  'Email':        '#E8F0FE',
-  'Call':         '#E6F7F2',
-  'Clienteling':  '#FEEBF0',
-  'Chat':         '#F3E8FF',
-  'PAYMENT':      '#FFF1E6',
-  'PAYMENT NOT CAPTURED': '#FFE8EA',
-  'FRAUD':        '#FFE8D9',
-  'DELIVERY':     '#FDF6CD',
-  'DELIVERY ISSUE/DELAY': '#FFE6E6',
-  'DELIVERY OPEN INVESTIGATION': '#F1E6FF',
-  'DELIVERY RETURN TO SENDER': '#E6FBFF',
-  'DOC':          '#ECE7FF',
-  'REFUNDS':      '#EEEDED',
-  'REFUNDS STATUT':'#F2F6FA',
-  'REPAIR':       '#E6FBEE',
-  'RETURN':       '#FFFADD',
-  'RETURN IN STORE':'#E7ECFF',
-  'RETURN KO':    '#FFE6EA',
-  'SHORT SHIPMENT':'#DAF7EF',
-  'Lunch':        '#FFECCE',
-  'Break':        '#F5F5F5'
+  'Call':         '#9cdcf0',
+  'Mail':         '#f59e6c',
+  'Chat':         '#d0f7be',
+  'Clienteling':  '#f2e3a5',
+  'Fraud':        '#c7c9d4',
+  'Back Office':  '#cfb2b2',
+  'Lunch Break':  '#f0efed',
+  'Break':        '#f0efed',
+  'Morning Brief':'#e2f2e1',
+  'Training':     '#FFECCE'
 };
 
 // === injecte/MAJ un bloc <style> dédié au planner ===
