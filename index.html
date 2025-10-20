@@ -9,14 +9,25 @@
 <body>
 <header>
   <div class="container row">
-    <div class="title">ROMAN — Resource Optimization & Management Allocation Network</div>
+    <div class="title">ROMAN | Resource Optimization & Management Allocation Network</div>
+
+    <!-- ====== HEADER RIGHT (MAJ B4) ====== -->
     <div class="row" style="margin-left:auto; gap:8px; align-items:center">
-      <div class="muted">Local demo • no server</div>
+      <!-- Statut d'auth (remplacé dynamiquement par auth.js) -->
+      <div id="authStatus" class="muted">Not signed in</div>
+
+      <!-- Actions Auth -->
+      <button class="btn ghost" id="btnLogin">Sign in</button>
+      <button class="btn ghost" id="btnLogout" style="display:none">Sign out</button>
+
+      <!-- Persistance locale (état ROMAN.store) -->
       <button class="btn ghost" id="btnSave">Save</button>
       <button class="btn ghost" id="btnLoad">Load</button>
       <button class="btn ghost" id="btnResetAll" title="Clear storage & reload">Reset</button>
     </div>
+    <!-- ====== /HEADER RIGHT ====== -->
   </div>
+
   <div class="container tabs">
     <button class="tab active" data-tab="Landing">Landing</button>
     <button class="tab" data-tab="Agents">Agents</button>
@@ -70,7 +81,7 @@
     <div class="planner" id="plannerHost"></div>
   </section>
 
-  <!-- Les autres onglets (contenu HTML) restent comme avant ; logique JS ajoutée plus tard -->
+  <!-- ===== TAB: AGENTS ===== -->
   <section id="tab-Agents" class="card" style="display:none">
     <h3 style="margin:0 0 8px 0">Agents</h3>
     <div class="row" style="margin-bottom:8px">
@@ -119,6 +130,7 @@
     </div>
   </section>
 
+  <!-- ===== TAB: TASKS ===== -->
   <section id="tab-Tasks" class="card" style="display:none">
     <h3 style="margin:0 0 8px 0">Tasks</h3>
     <div class="row" style="margin-bottom:8px">
@@ -142,6 +154,7 @@
     </div>
   </section>
 
+  <!-- ===== TAB: FORECAST ===== -->
   <section id="tab-Forecast" class="card" style="display:none">
     <h3 style="margin:0 0 8px 0">Forecast</h3>
     <div class="card" style="padding:12px;margin:12px 0">
@@ -197,6 +210,7 @@
     </div>
   </section>
 
+  <!-- ===== TAB: REGULATIONS ===== -->
   <section id="tab-Regulations" class="card" style="display:none">
     <h3 style="margin:0 0 8px 0">Regulations</h3>
     <div class="row" style="margin-bottom:8px">
@@ -240,4 +254,5 @@
 <script type="module" src="./assets/js/main.js"></script>
 </body>
 </html>
+
 
