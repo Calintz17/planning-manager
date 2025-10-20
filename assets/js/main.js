@@ -4,6 +4,7 @@ import { optimize } from './optimizer.js';
 import { initAgents } from './agents.js';
 import { initTasks } from './tasks.js';
 import { initForecast } from './forecast.js';
+import { initRegulations } from './regulations.js';
 
 // Exposer pour planning.js (bouton Optimize)
 window.ROMAN_optimize = optimize;
@@ -17,8 +18,9 @@ initPlanning();
 initAgents();
 initTasks();
 initForecast();
+initRegulations();
 
-// Synchronisations lors du Load (réafficher les vues)
+// Save/Load/Reset (réafficher les vues après Load)
 document.getElementById('btnSave')?.addEventListener('click', ()=> saveState());
 document.getElementById('btnLoad')?.addEventListener('click', ()=>{
   loadState();
@@ -27,5 +29,6 @@ document.getElementById('btnLoad')?.addEventListener('click', ()=>{
   initTasks();
   initAgents();
   initForecast();
+  initRegulations();
 });
 document.getElementById('btnResetAll')?.addEventListener('click', ()=> resetAll());
