@@ -1,111 +1,243 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Planning Manager</title>
-  <style>
-    :root { --bg:#f8fafc; --card:#fff; --text:#0f172a; --muted:#475569; --border:#e2e8f0; }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-    .wrap{max-width:960px;margin:0 auto;padding:16px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-    h1{margin:0 0 8px 0}
-    label{display:block;margin:8px 0 4px 0;color:var(--muted);font-size:14px}
-    input,button,select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:14px}
-    button{cursor:pointer}
-    .row{display:flex;gap:8px}
-    .row>*{flex:1}
-    .muted{color:var(--muted);font-size:13px}
-    .grid{display:grid;gap:12px}
-    @media(min-width:768px){ .grid{grid-template-columns:1fr 2fr} }
-    table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left;font-size:14px}
-    .hide{display:none}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ROMAN — Resource Optimization & Management Allocation Network</title>
+<link rel="stylesheet" href="./assets/css/styles.css">
 </head>
 <body>
-  <div class="wrap">
-    <h1>Planning Manager</h1>
-    <p class="muted">GitHub Pages (statique) + Auth & DB via Supabase.</p>
+<header>
+  <div class="container row">
+    <div class="title">ROMAN — Resource Optimization & Management Allocation Network</div>
+    <div class="row" style="margin-left:auto; gap:8px; align-items:center">
+      <div class="muted">Local demo • no server</div>
+      <button class="btn ghost" id="btnSave">Save</button>
+      <button class="btn ghost" id="btnLoad">Load</button>
+      <button class="btn ghost" id="btnResetAll" title="Clear storage & reload">Reset</button>
+    </div>
+  </div>
+  <div class="container tabs">
+    <button class="tab active" data-tab="Landing">Landing</button>
+    <button class="tab" data-tab="Agents">Agents</button>
+    <button class="tab" data-tab="Tasks">Tasks</button>
+    <button class="tab" data-tab="Forecast">Forecast</button>
+    <button class="tab" data-tab="Regulations">Regulations</button>
+  </div>
+</header>
 
-    <!-- 0) Porte souple: code d’accès -->
-    <section id="gate" class="card">
-      <h2 style="margin-top:0;font-size:18px">Code d’accès</h2>
-      <div class="row">
-        <input id="accessCode" placeholder="Entrer le code">
-        <button id="enterBtn">Entrer</button>
+<main class="container">
+  <!-- ===== TAB: LANDING (Planning View) ===== -->
+  <section id="tab-Landing" class="card">
+    <h3 style="margin:0 0 8px 0">Weekly Planning</h3>
+    <div class="row" style="margin-bottom:8px">
+      <div class="controls-right">
+        <span class="label">Year</span>
+        <select id="selYear" class="select"></select>
+
+        <span class="label">Week</span>
+        <select id="selWeek" class="select"></select>
+
+        <span class="label">Region</span>
+        <select id="selRegion" class="select">
+          <option>Europe</option>
+          <option>Americas</option>
+          <option>Greater China</option>
+          <option>Japan</option>
+          <option>South Korea</option>
+          <option>SEAO</option>
+        </select>
+
+        <button class="btn" id="btnOptimize">Optimize</button>
+        <button class="btn ghost" id="btnClear">Clear</button>
+        <button class="btn ghost" id="btnExport">Export CSV</button>
+        <span id="coverageBadge" class="badge" style="margin-left:4px">No run</span>
       </div>
-      <p class="muted" id="gateMsg"></p>
-    </section>
+    </div>
 
-    <!-- 1) Auth Supabase -->
-    <section id="auth" class="card hide">
-      <h2 style="margin-top:0;font-size:18px">Connexion</h2>
-      <div class="row">
-        <div>
-          <label>Email</label>
-          <input id="email" type="email" placeholder="you@email.com">
-        </div>
-        <div>
-          <label>Mot de passe</label>
-          <input id="password" type="password" placeholder="••••••••">
-        </div>
+    <div class="legend" style="margin-bottom:8px">
+      <span class="task-chip t-Email">Email</span>
+      <span class="task-chip t-Call">Call</span>
+      <span class="task-chip t-Chat">Chat</span>
+      <span class="task-chip t-PAYMENT">Payment</span>
+      <span class="task-chip t-FRAUD">Fraud</span>
+      <span class="task-chip t-DELIVERY">Delivery</span>
+      <span class="task-chip t-RETURN">Return</span>
+      <span class="task-chip">Lunch</span>
+      <span class="task-chip">Break</span>
+    </div>
+
+    <div class="planner" id="plannerHost"></div>
+  </section>
+
+  <!-- Les autres onglets (contenu HTML) restent comme avant ; logique JS ajoutée plus tard -->
+  <section id="tab-Agents" class="card" style="display:none">
+    <h3 style="margin:0 0 8px 0">Agents</h3>
+    <div class="row" style="margin-bottom:8px">
+      <button class="btn" id="agAdd">Add agent</button>
+      <button class="btn ghost" id="agReset">Reset sample</button>
+      <button class="btn ghost" id="agExport">Export CSV</button>
+      <span class="badge" id="agCount" style="margin-left:auto">0 agents</span>
+    </div>
+    <div class="card" style="padding:12px;margin:12px 0">
+      <h4 style="margin:0 0 8px 0">A. Roster & Availability</h4>
+      <div class="muted" style="margin-bottom:6px">
+        Present = working day; PTO flag = quick absence override for that day.
       </div>
-      <div class="row" style="margin-top:8px">
-        <button id="login">Se connecter</button>
-        <button id="signup">Créer un compte</button>
-      </div>
-      <p class="muted" id="authMsg"></p>
-    </section>
-
-    <!-- 2) Application -->
-    <section id="app" class="grid hide">
-      <!-- Colonne gauche -->
-      <div class="card">
-        <h3 style="margin-top:0">Semaine ISO</h3>
-        <div class="row">
-          <input id="weekInput" type="number" min="1" max="53">
-          <input id="yearInput" type="number" min="2024">
-        </div>
-        <button id="refresh" style="margin-top:8px">Afficher</button>
-
-        <hr style="margin:16px 0;border:0;border-top:1px solid var(--border)">
-
-        <h3>Ajouter un shift</h3>
-        <label>Agent (nom complet)</label>
-        <div class="row">
-          <select id="agentSelect"></select>
-          <input id="agentName" placeholder="Ou taper un nouveau nom">
-        </div>
-        <div class="row" style="margin-top:8px">
-          <select id="daySelect"></select>
-          <input id="startTime" type="time" value="09:00">
-          <input id="endTime" type="time" value="17:00">
-        </div>
-        <button id="addShift" style="margin-top:8px">Ajouter</button>
-        <p class="muted" id="formMsg"></p>
-
-        <button id="logout" style="margin-top:16px">Se déconnecter</button>
-      </div>
-
-      <!-- Colonne droite -->
-      <div class="card">
-        <h3 style="margin-top:0">Planning de la semaine</h3>
-        <div class="muted" id="rangeLabel" style="margin-bottom:8px"></div>
-        <table>
-          <thead><tr><th>Jour</th><th>Agent</th><th>Début</th><th>Fin</th><th>Actions</th></tr></thead>
-          <tbody id="planningBody"><tr><td colspan="5" class="muted">Aucun shift.</td></tr></tbody>
+      <div class="scroll">
+        <table id="agRoster" class="sticky-left">
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Region</th>
+              <th>Template</th>
+              <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+              <th class="mono">PTO Mon</th><th class="mono">PTO Tue</th><th class="mono">PTO Wed</th>
+              <th class="mono">PTO Thu</th><th class="mono">PTO Fri</th><th class="mono">PTO Sat</th><th class="mono">PTO Sun</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
         </table>
       </div>
-    </section>
+    </div>
+    <div class="card" style="padding:12px;margin:12px 0">
+      <h4 style="margin:0 0 8px 0">B. Skills Matrix (opt-out per task)</h4>
+      <div class="muted" style="margin-bottom:6px">
+        Tasks are checked by default; uncheck to opt-out the agent from a task.
+      </div>
+      <div class="scroll" style="max-height:420px">
+        <table id="agSkills" class="sticky-left">
+          <thead>
+            <tr id="agSkillsHead">
+              <th>Agent</th>
+            </tr>
+          </thead>
+          <tbody id="agSkillsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-    <p class="muted" style="margin-top:24px">© Roman Inc.</p>
-  </div>
+  <section id="tab-Tasks" class="card" style="display:none">
+    <h3 style="margin:0 0 8px 0">Tasks</h3>
+    <div class="row" style="margin-bottom:8px">
+      <button class="btn" id="btnTasksReset">Reset to defaults</button>
+      <button class="btn ghost" id="btnTasksExport">Export CSV</button>
+      <span class="badge" id="tasksCountBadge" style="margin-left:auto">0 tasks</span>
+    </div>
+    <div class="scroll" style="max-height:520px">
+      <table id="tasksTable">
+        <thead>
+          <tr>
+            <th style="width:28%">Task</th>
+            <th style="width:20%">Priority</th>
+            <th style="width:18%">Avg Handle Time (min)</th>
+            <th style="width:14%">Enabled</th>
+            <th style="width:20%">Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
 
-  <!-- SDK Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Ton code -->
-  <script src="./app.js"></script>
+  <section id="tab-Forecast" class="card" style="display:none">
+    <h3 style="margin:0 0 8px 0">Forecast</h3>
+    <div class="card" style="padding:12px;margin:12px 0">
+      <h4 style="margin:0 0 8px 0">A. Regional totals & task %</h4>
+      <div class="row" style="margin-bottom:8px">
+        <span class="muted">Each region has a total volume. The task row % must sum to 100.</span>
+        <span class="badge" id="fcTaskAllOk" style="margin-left:auto">Unchecked</span>
+      </div>
+      <div class="row" style="gap:12px">
+        <div style="flex:1">
+          <div class="scroll">
+            <table id="fcRegionTotals">
+              <thead><tr><th>Region</th><th>Total forecast</th><th class="mono">Sum % (tasks)</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div style="flex:2">
+          <div class="scroll" style="max-height:420px">
+            <table id="fcTaskSplit" class="sticky-left">
+              <thead><tr id="fcTaskSplitHead"></tr></thead>
+              <tbody id="fcTaskSplitBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:12px;margin:12px 0">
+      <h4 style="margin:0 0 8px 0">B. Weekly repartition (w01–w52 × regions)</h4>
+      <div class="row" style="margin-bottom:8px">
+        <span class="muted">Soft check: each week row ~100% across regions.</span>
+        <span class="badge" id="fcWeeklyOk" style="margin-left:auto">Unchecked</span>
+      </div>
+      <div class="scroll" style="max-height:420px">
+        <table id="fcWeekly" class="sticky-left">
+          <thead><tr id="fcWeeklyHead"><th>Week</th></tr></thead>
+          <tbody id="fcWeeklyBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="padding:12px;margin:12px 0">
+      <h4 style="margin:0 0 8px 0">C. Daily + Hourly repartition (per region)</h4>
+      <p class="muted" style="margin:0 0 6px 0">For each region, set: column 1 = day share of weekly (must sum 100). Remaining columns (08:00→21:00) must sum 100 per row.</p>
+      <div id="fcHourlyBlocks"></div>
+    </div>
+
+    <div class="row" style="gap:8px">
+      <button class="btn" id="fcValidate">Validate all %</button>
+      <button class="btn ghost" id="fcReset">Reset defaults</button>
+      <span class="badge" id="fcSummary" style="margin-left:auto">No check yet</span>
+    </div>
+  </section>
+
+  <section id="tab-Regulations" class="card" style="display:none">
+    <h3 style="margin:0 0 8px 0">Regulations</h3>
+    <div class="row" style="margin-bottom:8px">
+      <label class="muted">Filter region:</label>
+      <select id="rgFilter" class="input">
+        <option value="ALL">All regions</option>
+        <option value="Europe">Europe</option>
+        <option value="Americas">Americas</option>
+        <option value="Greater China">Greater China</option>
+        <option value="Japan">Japan</option>
+        <option value="South Korea">South Korea</option>
+        <option value="SEAO">SEAO</option>
+      </select>
+      <button class="btn" id="rgAdd">Add rule</button>
+      <button class="btn ghost" id="rgReset">Reset defaults</button>
+      <button class="btn ghost" id="rgExport">Export CSV</button>
+      <span class="badge" id="rgCount" style="margin-left:auto">0 rules</span>
+    </div>
+
+    <div class="scroll" style="max-height:520px">
+      <table id="rgTable" class="sticky-left">
+        <thead>
+          <tr>
+            <th style="width:26%">Rule</th>
+            <th style="width:16%">Region</th>
+            <th style="width:16%">Value</th>
+            <th style="width:30%">Notes</th>
+            <th style="width:8%">Enabled</th>
+            <th style="width:8%"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="footer">© Roman Inc.</div>
+</main>
+
+<!-- Entrée modules -->
+<script type="module" src="./assets/js/main.js"></script>
 </body>
 </html>
+
