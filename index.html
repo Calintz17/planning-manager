@@ -5,101 +5,23 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Planning Manager</title>
   <style>
-    :root { --bg:#f8fafc; --card:#ffffff; --text:#0f172a; --muted:#475569; --border:#e2e8f0; --accent:#111; }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-    .wrap{max-width:960px;margin:0 auto;padding:16px}
-    header{margin-bottom:16px}
-    h1{margin:0 0 4px 0;font-size:22px}
-    .grid{display:grid;gap:12px}
-    @media (min-width:768px){ .grid{grid-template-columns:1fr 2fr} }
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-    label{display:block;font-size:14px;margin-bottom:6px;color:var(--muted)}
-    input,button,select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:14px}
-    button{cursor:pointer}
-    .row{display:flex;gap:8px}
-    .row>*{flex:1}
-    .muted{color:var(--muted);font-size:13px}
-    table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left;font-size:14px}
-    th{color:var(--muted);font-weight:600}
-    .right{display:flex;justify-content:flex-end}
-    .hide{display:none}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:24px;background:#f8fafc;color:#0f172a}
+    .wrap{max-width:900px;margin:0 auto}
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px}
+    h1{margin:0 0 8px 0}
+    .muted{color:#475569}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <header>
-      <h1>Planning Manager</h1>
-      <p class="muted">Prototype connecté à Supabase. Login requis.</p>
-    </header>
+    <h1>Planning Manager</h1>
+    <p class="muted">Site de test publié avec GitHub Pages.</p>
 
-    <!-- Bloc Auth -->
-    <section id="auth" class="card">
-      <h2 style="margin-top:0;font-size:18px">Connexion</h2>
-      <div class="row">
-        <div>
-          <label>Email</label>
-          <input id="email" type="email" placeholder="you@email.com">
-        </div>
-        <div>
-          <label>Mot de passe</label>
-          <input id="password" type="password" placeholder="••••••••">
-        </div>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <button id="login">Se connecter</button>
-        <button id="signup">Créer un compte</button>
-      </div>
-      <p id="authMsg" class="muted" style="margin-top:8px"></p>
-    </section>
-
-    <!-- App -->
-    <section id="app" class="grid hide">
-      <!-- Colonne gauche: filtres + actions -->
-      <div class="card">
-        <h3 style="margin-top:0">Semaine ISO</h3>
-        <div class="row">
-          <input id="weekInput" type="number" min="1" max="53" value="">
-          <input id="yearInput" type="number" min="2024" value="">
-        </div>
-        <button id="refresh" style="margin-top:8px">Afficher</button>
-        <hr style="margin:16px 0;border:0;border-top:1px solid var(--border)">
-        <h3 style="margin:0 0 8px 0">Ajouter un shift</h3>
-        <label>Agent</label>
-        <input id="agentName" placeholder="Nom et prénom">
-        <div class="row" style="margin-top:8px">
-          <select id="daySelect"></select>
-          <input id="startTime" type="time" value="09:00">
-          <input id="endTime" type="time" value="17:00">
-        </div>
-        <button id="addShift" style="margin-top:8px">Ajouter</button>
-        <p id="formMsg" class="muted" style="margin-top:8px"></p>
-        <div class="right" style="margin-top:16px">
-          <button id="logout" style="max-width:200px">Se déconnecter</button>
-        </div>
-      </div>
-
-      <!-- Colonne droite: planning -->
-      <div class="card">
-        <h3 style="margin-top:0">Planning de la semaine</h3>
-        <div id="rangeLabel" class="muted" style="margin-bottom:8px"></div>
-        <table>
-          <thead>
-            <tr><th>Jour</th><th>Agent</th><th>Début</th><th>Fin</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="planningBody">
-            <tr><td colspan="5" class="muted">Aucun shift pour l’instant.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <p class="muted" style="margin-top:24px">© Roman Inc.</p>
+    <div class="card">
+      <p>Si tu vois cette page en ligne, GitHub Pages fonctionne.</p>
+      <p>URL de ton site : regarde dans Settings → Pages (ou essaie <em>https://ton-pseudo.github.io/planning-manager/</em>).</p>
+    </div>
   </div>
-
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./app.js"></script>
 </body>
 </html>
+
