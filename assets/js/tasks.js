@@ -1,150 +1,112 @@
 // assets/js/tasks.js
-// Tasks catalog: priority, AHT, enabled, notes
+// Nouveau catalogue de tâches + utilitaires
+
 import { ROMAN } from './store.js';
 
-const PRIORITIES = ['Mandatory','P1','P2','P3'];
-
-const DEFAULT_TASKS = [
-  { name:'Email', priority:'P1', aht:8,  enabled:true, notes:'' },
-  { name:'Call', priority:'P1', aht:12, enabled:true, notes:'' },
-  { name:'Clienteling', priority:'P2', aht:15, enabled:true, notes:'' },
-  { name:'Chat', priority:'P1', aht:6,  enabled:true, notes:'' },
-  { name:'DELIVERY', priority:'P2', aht:10, enabled:true, notes:'' },
-  { name:'DELIVERY ISSUE/DELAY', priority:'P2', aht:12, enabled:true, notes:'' },
-  { name:'DELIVERY OPEN INVESTIGATION', priority:'P2', aht:15, enabled:true, notes:'' },
-  { name:'DELIVERY RETURN TO SENDER', priority:'P2', aht:10, enabled:true, notes:'' },
-  { name:'DOC', priority:'P2', aht:7,  enabled:true, notes:'' },
-  { name:'FRAUD', priority:'Mandatory', aht:20, enabled:true, notes:'' },
-  { name:'PAYMENT', priority:'P1', aht:8,  enabled:true, notes:'' },
-  { name:'PAYMENT NOT CAPTURED', priority:'P1', aht:10, enabled:true, notes:'' },
-  { name:'REFUNDS', priority:'P1', aht:12, enabled:true, notes:'' },
-  { name:'REFUNDS STATUT', priority:'P2', aht:6,  enabled:true, notes:'' },
-  { name:'REPAIR', priority:'P2', aht:30, enabled:true, notes:'' },
-  { name:'RETURN', priority:'P1', aht:10, enabled:true, notes:'' },
-  { name:'RETURN IN STORE', priority:'P1', aht:8,  enabled:true, notes:'' },
-  { name:'RETURN KO', priority:'P2', aht:12, enabled:true, notes:'' },
-  { name:'SHORT SHIPMENT', priority:'P2', aht:15, enabled:true, notes:'' },
+// AHT par défaut (minutes) — éditable depuis l'UI Tasks si tu veux
+const DEFAULT_TASKS_NEW = [
+  { name:'Call',         priority:'P1',        aht:12, enabled:true,  notes:'' },
+  { name:'Mail',         priority:'P1',        aht:8,  enabled:true,  notes:'' },
+  { name:'Chat',         priority:'P1',        aht:6,  enabled:true,  notes:'' },
+  { name:'Clienteling',  priority:'P2',        aht:15, enabled:true,  notes:'' },
+  { name:'Fraud',        priority:'Mandatory', aht:20, enabled:true,  notes:'' },
+  // Back Office = calcul d'AHT pondéré au runtime (on met une valeur par défaut ici)
+  { name:'Back Office',  priority:'P2',        aht:12, enabled:true,  notes:'Auto AHT from micro-tasks' },
+  // Ces 4 tâches “temps internes” restent à 0% forecast par défaut
+  { name:'Lunch Break',  priority:'Mandatory', aht:60, enabled:false, notes:'' },
+  { name:'Break',        priority:'Mandatory', aht:15, enabled:false, notes:'' },
+  { name:'Morning Brief',priority:'P3',        aht:20, enabled:false, notes:'' },
+  { name:'Training',     priority:'P3',        aht:45, enabled:false, notes:'' },
 ];
 
-function ensureTasks() {
-  const S = ROMAN.store;
-  if (!Array.isArray(S.tasks) || !S.tasks.length) {
-    S.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+// ancienne (micro) -> utilisée pour calcul AHT Back Office
+export const LEGACY_MICROTASKS_AHT = {
+  'DELIVERY':10, 'DELIVERY ISSUE/DELAY':12, 'DELIVERY OPEN INVESTIGATION':15, 'DELIVERY RETURN TO SENDER':10,
+  'DOC':7, 'PAYMENT':8, 'PAYMENT NOT CAPTURED':10, 'REFUNDS':12, 'REFUNDS STATUT':6,
+  'REPAIR':30, 'RETURN':10, 'RETURN IN STORE':8, 'RETURN KO':12, 'SHORT SHIPMENT':15
+};
+
+export function getNewTaskCatalog(){
+  if (!Array.isArray(ROMAN.store.tasks) || ROMAN.store.tasks.length === 0){
+    ROMAN.store.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS_NEW));
   } else {
-    // normalize: keep known fields only; preserve order
-    S.tasks = S.tasks.map(t => ({
-      name: String(t.name),
-      priority: PRIORITIES.includes(t.priority) ? t.priority : 'P2',
-      aht: Number.isFinite(+t.aht) ? +t.aht : 10,
-      enabled: !!t.enabled,
-      notes: String(t.notes ?? '')
-    }));
+    // Si un ancien catalogue existe, on remplace par le nouveau (simplification projet)
+    ROMAN.store.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS_NEW));
   }
+  return ROMAN.store.tasks;
 }
 
-function el(tag, attrs={}, html='') {
-  const e = document.createElement(tag);
-  for (const k in attrs) e.setAttribute(k, attrs[k]);
-  if (html !== undefined) e.innerHTML = html;
-  return e;
-}
-
-function render() {
-  ensureTasks();
+// UI rendering (table) — identique à avant mais affiche la nouvelle liste
+export function initTasksUI(){
   const S = ROMAN.store;
+  if (!S.tasks || !S.tasks.length) getNewTaskCatalog();
+
+  const PRIORITIES = ['Mandatory','P1','P2','P3'];
   const tbody = document.querySelector('#tasksTable tbody');
   const badge = document.getElementById('tasksCountBadge');
-  if (!tbody) return;
 
-  tbody.innerHTML = '';
-  const frag = document.createDocumentFragment();
+  function el(tag, attrs={}, html=''){
+    const e = document.createElement(tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    if(html!==undefined) e.innerHTML = html;
+    return e;
+  }
 
-  S.tasks.forEach((t, idx) => {
-    const tr = el('tr');
+  function render(){
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const frag = document.createDocumentFragment();
 
-    // Name (read-only for MVP — clé stable)
-    const tdName = el('td'); tdName.textContent = t.name; tr.appendChild(tdName);
+    S.tasks.forEach((t)=>{
+      const tr = el('tr');
 
-    // Priority
-    const tdPrio = el('td');
-    const sel = el('select', { class:'input' });
-    PRIORITIES.forEach(p => {
-      const opt = el('option'); opt.value = p; opt.textContent = p; if (p === t.priority) opt.selected = true;
-      sel.appendChild(opt);
+      const tdName = el('td'); tdName.textContent = t.name; tr.appendChild(tdName);
+
+      const tdPrio = el('td');
+      const sel = el('select', { class:'input' });
+      PRIORITIES.forEach(p=>{
+        const o = el('option'); o.value=p; o.textContent=p; if(p===t.priority) o.selected=true;
+        sel.appendChild(o);
+      });
+      sel.addEventListener('change', ()=> t.priority = sel.value);
+      tdPrio.appendChild(sel); tr.appendChild(tdPrio);
+
+      const tdAht = el('td');
+      const inp = el('input', { class:'input mono', type:'number', step:'0.5', value:String(t.aht) });
+      inp.addEventListener('input', ()=> t.aht = parseFloat(inp.value||'0') || 0);
+      tdAht.appendChild(inp); tr.appendChild(tdAht);
+
+      const tdEn = el('td');
+      const chk = el('input', { type:'checkbox' }); chk.checked = !!t.enabled;
+      chk.addEventListener('change', ()=> t.enabled = chk.checked);
+      tdEn.appendChild(chk); tr.appendChild(tdEn);
+
+      const tdNotes = el('td');
+      const notes = el('input', { class:'input', value: t.notes||'' });
+      notes.addEventListener('input', ()=> t.notes = notes.value);
+      tdNotes.appendChild(notes); tr.appendChild(tdNotes);
+
+      frag.appendChild(tr);
     });
-    sel.addEventListener('change', () => {
-      t.priority = sel.value;
-      notifyTasksUpdated();
-    });
-    tdPrio.appendChild(sel); tr.appendChild(tdPrio);
 
-    // AHT (min)
-    const tdAht = el('td');
-    const inpAHT = el('input', { class:'input mono', type:'number', min:'0', step:'0.5', value:String(t.aht) });
-    inpAHT.addEventListener('input', () => {
-      const v = parseFloat(inpAHT.value || '0');
-      t.aht = Number.isFinite(v) ? v : 0;
-      // Pas besoin de redessiner, l’optimizer lira la valeur au prochain run
-    });
-    tdAht.appendChild(inpAHT); tr.appendChild(tdAht);
+    tbody.appendChild(frag);
+    if (badge) badge.textContent = `${S.tasks.length} tasks`;
+  }
 
-    // Enabled
-    const tdEn = el('td');
-    const chk = el('input', { type:'checkbox' }); chk.checked = !!t.enabled;
-    chk.addEventListener('change', () => {
-      t.enabled = chk.checked;
-      notifyTasksUpdated(); // la Skills Matrix peut changer d’étendue
-    });
-    tdEn.appendChild(chk); tr.appendChild(tdEn);
-
-    // Notes
-    const tdNotes = el('td');
-    const inpNotes = el('input', { class:'input', type:'text', value: t.notes || '' });
-    inpNotes.addEventListener('input', () => { t.notes = inpNotes.value; });
-    tdNotes.appendChild(inpNotes); tr.appendChild(tdNotes);
-
-    frag.appendChild(tr);
+  document.getElementById('btnTasksReset')?.addEventListener('click', ()=>{
+    S.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS_NEW));
+    render();
+  });
+  document.getElementById('btnTasksExport')?.addEventListener('click', ()=>{
+    const lines = ['task,priority,aht_min,enabled,notes'];
+    for (const t of S.tasks){
+      lines.push([JSON.stringify(t.name), t.priority, t.aht, t.enabled?1:0, JSON.stringify(t.notes||'')].join(','));
+    }
+    const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'roman-tasks.csv'; a.click(); URL.revokeObjectURL(a.href);
   });
 
-  tbody.appendChild(frag);
-  if (badge) badge.textContent = `${ROMAN.store.tasks.length} tasks`;
-}
-
-function resetDefaults() {
-  ROMAN.store.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
-  render();
-  notifyTasksUpdated(true);
-}
-
-function exportCSV() {
-  const lines = ['task,priority,aht_min,enabled,notes'];
-  for (const t of ROMAN.store.tasks) {
-    lines.push([
-      JSON.stringify(t.name),
-      t.priority,
-      t.aht,
-      t.enabled ? '1' : '0',
-      JSON.stringify(t.notes || '')
-    ].join(','));
-  }
-  const blob = new Blob([lines.join('\n')], { type:'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'roman-tasks.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-// Notifie le reste de l’app que les tâches ont changé (Agents doit recalculer la Skills Matrix)
-function notifyTasksUpdated(force = false) {
-  window.dispatchEvent(new CustomEvent('roman:tasks-updated', { detail: { force } }));
-}
-
-export function initTasks() {
-  // Wire boutons
-  document.getElementById('btnTasksReset')?.addEventListener('click', resetDefaults);
-  document.getElementById('btnTasksExport')?.addEventListener('click', exportCSV);
-
-  // Premier rendu
   render();
 }
