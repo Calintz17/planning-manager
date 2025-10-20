@@ -2,8 +2,9 @@ import { ROMAN, wireTabs, setActiveTab, saveState, loadState, resetAll } from '.
 import { initPlanning } from './planning.js';
 import { optimize } from './optimizer.js';
 import { initAgents } from './agents.js';
+import { initTasks } from './tasks.js';
 
-// Exposer pour planning.js (le bouton appelle window.ROMAN_optimize)
+// Exposer pour planning.js (bouton Optimize)
 window.ROMAN_optimize = optimize;
 
 // Tabs
@@ -12,17 +13,23 @@ setActiveTab('Landing');
 
 // Init modules
 initPlanning();
-initAgents(); // <-- active l’onglet Agents
+initAgents();
+initTasks();
+
+// Quand les tâches changent, on réinitialise l’onglet Agents (pour recalculer colonnes de skills)
+window.addEventListener('roman:tasks-updated', () => {
+  initAgents();
+});
 
 // Header buttons Save/Load/Reset
 document.getElementById('btnSave')?.addEventListener('click', ()=> saveState());
 document.getElementById('btnLoad')?.addEventListener('click', ()=>{
   loadState();
-  // re-peint léger
-  if(typeof window.initPlannerControls==='function') window.initPlannerControls();
-  if(typeof window.renderPlanner==='function') window.renderPlanner();
-  // rafraîchir l’onglet Agents (si besoin)
-  // on relance initAgents pour reconstruire les têtes/skills selon tasks :
+  // rafraîchissements légers
+  if (typeof window.initPlannerControls==='function') window.initPlannerControls();
+  if (typeof window.renderPlanner==='function') window.renderPlanner();
+  // re-init modules dépendants
+  initTasks();
   initAgents();
 });
 document.getElementById('btnResetAll')?.addEventListener('click', ()=> resetAll());
