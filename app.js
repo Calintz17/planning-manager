@@ -1,7 +1,7 @@
 /***** 0) CONFIG — REMPLACE CES 2 VALEURS *****/
-const SUPABASE_URL = "https://zllfthitcgexvvumxxpu.supabase.co";   // <- Project URL (Settings > API)
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbGZ0aGl0Y2dleHZ2dW14eHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4OTkyMzQsImV4cCI6MjA3NjQ3NTIzNH0.oXi1IhdQev1Xjy75UsZ_Kejocp3ZgdKclMqsVLSNeG4";          // <- anon public key (Settings > API)
-const ACCESS_CODE = "admin";                     // <- petit code d'accès souple (modifiable)
+const SUPABASE_URL = "https://zllfthitcgexvvumxxpu.supabase.co";   // Settings > API > Project URL
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbGZ0aGl0Y2dleHZ2dW14eHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4OTkyMzQsImV4cCI6MjA3NjQ3NTIzNH0.oXi1IhdQev1Xjy75UsZ_Kejocp3ZgdKclMqsVLSNeG4";          // Settings > API > anon public key
+const ACCESS_CODE = "roman123";                     // petit code d'accès souple
 /*************************************************/
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -25,6 +25,7 @@ const logoutBtn = document.getElementById('logout');
 const weekInput = document.getElementById('weekInput');
 const yearInput = document.getElementById('yearInput');
 const daySelect = document.getElementById('daySelect');
+const agentSelect = document.getElementById('agentSelect');
 const refreshBtn = document.getElementById('refresh');
 const addShiftBtn = document.getElementById('addShift');
 const agentNameEl = document.getElementById('agentName');
@@ -88,37 +89,62 @@ logoutBtn.onclick = async () => {
   authBox.classList.remove('hide');
 };
 
-/* ---------- 3) App (planning) ---------- */
+/* ---------- 3) Data helpers ---------- */
+async function ensureAgent(name){
+  const { data: found, error: findErr } = await sb.from('agents').select('id').eq('full_name', name).maybeSingle();
+  if (findErr) throw findErr;
+  if (found?.id) return found.id;
+
+  const { data: created, error: insErr } = await sb.from('agents').insert({ full_name: name }).select().single();
+  if (insErr) throw insErr;
+  return created.id;
+}
+
+async function loadAgentsIntoSelect(){
+  const { data, error } = await sb.from('agents').select('id, full_name').order('full_name', { ascending: true });
+  agentSelect.innerHTML = "";
+  if (error){
+    agentSelect.innerHTML = `<option value="">(erreur chargement)</option>`;
+    return;
+  }
+  agentSelect.innerHTML = `<option value="">— choisir un agent —</option>`;
+  data.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.full_name; // on stocke le nom (simple pour l’instant)
+    opt.textContent = a.full_name;
+    agentSelect.appendChild(opt);
+  });
+}
+
+/* ---------- 4) App (planning) ---------- */
 refreshBtn.onclick = () => loadWeek();
 
 addShiftBtn.onclick = async () => {
   formMsg.textContent = "";
-  const name = agentNameEl.value.trim();
-  if (!name){ formMsg.textContent = "Nom d'agent obligatoire."; return; }
 
-  // 1) Trouver ou créer l'agent
-  let agentId;
-  const { data: found, error: findErr } = await sb.from('agents').select('id').eq('full_name', name).maybeSingle();
-  if (findErr){ formMsg.textContent = findErr.message; return; }
-  if (found?.id) agentId = found.id;
-  else {
-    const { data: created, error: insErr } = await sb.from('agents').insert({ full_name: name }).select().single();
-    if (insErr){ formMsg.textContent = insErr.message; return; }
-    agentId = created.id;
+  // priorite: nom dans le select; sinon champ texte
+  const candidate = agentSelect.value || agentNameEl.value.trim();
+  if (!candidate){ formMsg.textContent = "Choisis un agent ou tape un nom."; return; }
+
+  try {
+    const agentId = await ensureAgent(candidate);
+    const day = daySelect.value;
+
+    const { error: shiftErr } = await sb.from('shifts').insert({
+      agent_id: agentId,
+      day,
+      start_time: startTimeEl.value,
+      end_time: endTimeEl.value
+    });
+    if (shiftErr){ formMsg.textContent = shiftErr.message; return; }
+
+    agentNameEl.value = "";
+    formMsg.textContent = "Shift ajouté.";
+    await loadWeek();
+    await loadAgentsIntoSelect(); // au cas où un nouveau nom a été créé
+  } catch(e){
+    formMsg.textContent = e.message || String(e);
   }
-
-  // 2) Ajouter le shift
-  const day = daySelect.value;
-  const { error: shiftErr } = await sb.from('shifts').insert({
-    agent_id: agentId,
-    day,
-    start_time: startTimeEl.value,
-    end_time: endTimeEl.value
-  });
-  if (shiftErr){ formMsg.textContent = shiftErr.message; return; }
-
-  formMsg.textContent = "Shift ajouté.";
-  loadWeek();
 };
 
 async function showApp(){
@@ -129,6 +155,8 @@ async function showApp(){
 
   authBox.classList.add('hide');
   appBox.classList.remove('hide');
+
+  await loadAgentsIntoSelect();
   await loadWeek();
 }
 
@@ -190,7 +218,7 @@ window.delShift = async (id) => {
   loadWeek();
 };
 
-/* ---------- 4) Auto-connexion si session déjà présente ---------- */
+/* ---------- 5) Auto-connexion si session déjà présente ---------- */
 sb.auth.getSession().then(({ data }) => {
   if (data.session) {
     gate.classList.add('hide');
