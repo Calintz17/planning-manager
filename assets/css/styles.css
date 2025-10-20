@@ -1,0 +1,75 @@
+:root{
+  --bg:#f7f7fb; --card:#fff; --text:#111; --muted:#666; --border:#e5e7eb; --accent:#111;
+  --ok:#059669; --ok-bg:#ecfdf5; --warn:#b45309; --warn-bg:#fffbeb; --err:#dc2626; --err-bg:#fef2f2;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--border)}
+.container{max-width:1200px;margin:0 auto;padding:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.title{font-weight:700;font-size:18px}
+.tabs{display:flex;gap:8px;padding:0 16px 12px}
+.tab{border:1px solid var(--border);background:#f3f4f6;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+main{padding:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.muted{color:var(--muted)}
+.badge{display:inline-block;font-size:11px;padding:2px 6px;border-radius:999px;border:1px solid var(--border)}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.err{background:var(--err-bg);color:var(--err)}
+.scroll{overflow:auto;border:1px solid var(--border);border-radius:10px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border-top:1px solid var(--border);padding:6px;vertical-align:middle}
+thead th{background:#fafafa;text-align:left;border-top:none;position:sticky;top:0;z-index:1}
+.mono{font-variant-numeric:tabular-nums}
+.pill{border-radius:999px;padding:2px 8px;border:1px solid var(--border);font-size:11px}
+.legend{display:flex;gap:8px;flex-wrap:wrap}
+.task-chip{display:inline-block;border-radius:6px;padding:2px 6px;border:1px solid var(--border);font-size:11px;white-space:nowrap}
+/* task color seeds */
+.t-Email{background:#eef2ff}
+.t-Call{background:#e0f2fe}
+.t-Clienteling{background:#dcfce7}
+.t-Chat{background:#fae8ff}
+.t-DELIVERY{background:#fef3c7}
+.t-DELIVERY-ISSUE-DELAY{background:#fee2e2}
+.t-DELIVERY-OPEN-INVESTIGATION{background:#f3e8ff}
+.t-DELIVERY-RETURN-TO-SENDER{background:#cffafe}
+.t-DOC{background:#e9d5ff}
+.t-FRAUD{background:#fde68a}
+.t-PAYMENT{background:#e2e8f0}
+.t-PAYMENT-NOT-CAPTURED{background:#ffe4e6}
+.t-REFUNDS{background:#e7e5e4}
+.t-REFUNDS-STATUT{background:#f1f5f9}
+.t-REPAIR{background:#f0fdf4}
+.t-RETURN{background:#fef9c3}
+.t-RETURN-IN-STORE{background:#e0e7ff}
+.t-RETURN-KO{background:#fee2e2}
+.t-SHORT-SHIPMENT{background:#d1fae5}
+
+/* planner grid */
+.planner{border:1px solid var(--border);border-radius:12px;overflow:auto;background:#fff}
+.grid{display:grid;min-width:900px}
+.grid .head{position:sticky;top:0;background:#fafafa;z-index:2}
+.grid .cell{border-top:1px solid var(--border);border-left:1px solid var(--border);padding:6px;min-height:32px}
+.grid .cell.time{background:#fafafa;font-weight:600}
+.grid .row-label{position:sticky;left:0;background:#fafafa;border-right:1px solid var(--border);z-index:1}
+.btn{border:1px solid var(--border);background:var(--accent);color:#fff;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer}
+.btn.ghost{background:#f3f4f6;color:#111}
+.footer{position:fixed;bottom:8px;right:12px;font-size:11px;font-style:italic;color:#9ca3af}
+
+/* Planner day group */
+.day-group-head{
+  grid-column: 1 / -1;
+  background:#ffffff;
+  border-top:2px solid var(--border);
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.day-title{font-weight:700}
+.day-count{margin-left:auto}
+.controls-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.select{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 8px;font-size:13px}
+.label{font-size:12px;color:var(--muted)}
