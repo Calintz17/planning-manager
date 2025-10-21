@@ -29,7 +29,8 @@
   </div>
 
   <div class="container tabs">
-    <button class="tab active" data-tab="Landing">Landing</button>
+    <button class="tab active" data-tab="Attendance">Attendance</button>
+    <button class="tab" data-tab="Landing">Landing</button>
     <button class="tab" data-tab="Agents">Agents</button>
     <button class="tab" data-tab="Tasks">Tasks</button>
     <button class="tab" data-tab="Forecast">Forecast</button>
@@ -38,6 +39,42 @@
 </header>
 
 <main class="container">
+  <!-- ===== TAB: ATTENDANCE (4 weeks sliding) ===== -->
+<section id="tab-Attendance" class="card">
+  <h3 style="margin:0 0 12px 0">Attendance (4 weeks)</h3>
+
+  <!-- KPI Adherence -->
+  <div id="att-kpi" style="display:flex;flex-direction:column;align-items:center;gap:8px;margin:8px 0 16px 0">
+    <div style="font-weight:700;color:#0299FD">Adherence</div>
+    <div class="att-progress">
+      <div class="att-progress-fill" id="attProgressFill" style="width:0%"></div>
+      <div class="att-progress-label" id="attProgressLabel">0%</div>
+    </div>
+  </div>
+
+  <!-- Contrôles -->
+  <div class="row" style="gap:8px;align-items:center;margin-bottom:8px">
+    <span class="label">Region</span>
+    <select id="attRegion" class="select">
+      <option>Europe</option>
+      <option>Americas</option>
+      <option>Greater China</option>
+      <option>Japan</option>
+      <option>South Korea</option>
+      <option>SEAO</option>
+    </select>
+
+    <span class="label">Start</span>
+    <input type="date" id="attStart" class="select"/>
+    <button class="btn" id="attRecalc">Recalculate</button>
+  </div>
+
+  <!-- Grille -->
+  <div class="attendance-wrap">
+    <div id="attendanceGrid"></div>
+  </div>
+</section>
+
   <!-- ===== TAB: LANDING (Planning View) ===== -->
   <section id="tab-Landing" class="card">
     <h3 style="margin:0 0 8px 0">Weekly Planning</h3>
