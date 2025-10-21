@@ -133,4 +133,13 @@ thead th{background:#fafafa;text-align:left;border-top:none;position:sticky;top:
   #tab-Agents .th-rotate { height: 100px; width: 28px; }
   .drawer-form .drawer-row { grid-template-columns: 1fr; }
 }
+/* Vertical headers (skills) */
+#agentsTable th.rot {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+}
+#agentsTable input[type="checkbox"] {
+  transform: translateY(2px);
+}
 
