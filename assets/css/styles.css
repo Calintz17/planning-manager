@@ -89,4 +89,48 @@ thead th{background:#fafafa;text-align:left;border-top:none;position:sticky;top:
     padding: 6px 8px;
   }
 }
+/* ===== Agents tab: rotated headers, horizontal scroll, PTO UI ===== */
+
+/* entêtes pivotées (skills) */
+#tab-Agents .th-rotate { height: 120px; width: 36px; vertical-align: bottom; padding: 0 4px; }
+#tab-Agents .th-rotate .rotate {
+  transform: rotate(-90deg);
+  transform-origin: bottom left;
+  white-space: nowrap;
+  display: inline-block;
+  font-size: 12px;
+  margin-left: -8px;
+  margin-bottom: 8px;
+}
+
+/* scroll horizontal pour la grande matrice */
+.scroll-x { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+
+/* Drawer PTO (slide in à droite) */
+.drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; justify-content: flex-end; z-index: 50; }
+.drawer-panel { width: min(420px, 90vw); background: #fff; border-left: 1px solid var(--border); padding: 16px; overflow: auto; }
+.drawer-title { font-weight: 700; margin-bottom: 12px; }
+.drawer-form .drawer-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 8px; margin: 8px 0; }
+.drawer-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+/* Modal calendrier PTO */
+.modal-overlay { position: fixed; inset:0; background: rgba(0,0,0,.35); display: grid; place-items: center; z-index: 50; }
+.modal { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; max-width: 760px; width: 96vw; }
+.modal-title { font-weight: 700; margin-bottom: 12px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.calendar-cell { position: relative; border:1px solid var(--border); border-radius:8px; height: 64px; display:flex; align-items:flex-end; justify-content:flex-start; padding:6px; background: #fff; }
+.calendar-cell .cell-date { font-size: 11px; color: var(--muted); }
+.calendar-cell.pto-full { background: #f78686; color: #fff; }
+.calendar-cell.pto-half {
+  background:
+    linear-gradient(135deg, #f78686 50%, transparent 50%),
+    #fff;
+}
+.cell-half-tag { position: absolute; top: 6px; right:6px; font-size:10px; background:#fff; border:1px solid var(--border); border-radius:6px; padding:1px 4px; }
+
+/* Mobile tweaks */
+@media (max-width: 768px){
+  #tab-Agents .th-rotate { height: 100px; width: 28px; }
+  .drawer-form .drawer-row { grid-template-columns: 1fr; }
+}
 
