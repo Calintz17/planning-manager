@@ -116,19 +116,54 @@
   <span class="task-chip t-TRAINING">Training</span>
 </div>
 
-
     <div class="planner" id="plannerHost"></div>
   </section>
 
   <!-- ===== TAB: AGENTS ===== -->
   <section id="tab-Agents" class="card" style="display:none">
     <h3 style="margin:0 0 8px 0">Agents</h3>
+
+    <!-- ===== C. Directory (live from Supabase) — AJOUTÉ ===== -->
+    <div class="card" style="padding:12px;margin:12px 0">
+      <h4 style="margin:0 0 8px 0">C. Directory (live from Supabase)</h4>
+      <div class="row" style="gap:8px;align-items:center;margin-bottom:8px">
+        <label class="muted">Region:</label>
+        <select id="region-filter" class="select">
+          <option value="ALL">All</option>
+          <option value="Europe">Europe</option>
+          <option value="Americas">Americas</option>
+          <option value="Greater China">Greater China</option>
+          <option value="Japan">Japan</option>
+          <option value="South Korea">South Korea</option>
+          <option value="SEAO">SEAO</option>
+        </select>
+        <span class="badge" style="margin-left:auto">Count: <span id="agents-count">0</span></span>
+      </div>
+      <div class="scroll" style="max-height:420px; overflow:auto; border:1px solid #e5e7eb; border-radius:8px;">
+        <table id="agents-table" class="sticky-left" style="width:100%; border-collapse:collapse;">
+          <thead style="background:#f9fafb;">
+            <tr>
+              <th id="th-name" style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Name</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Region</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Status</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Skills</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Filled by assets/js/agents.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- ===== /C. Directory ===== -->
+
     <div class="row" style="margin-bottom:8px">
       <button class="btn" id="agAdd">Add agent</button>
       <button class="btn ghost" id="agReset">Reset sample</button>
       <button class="btn ghost" id="agExport">Export CSV</button>
       <span class="badge" id="agCount" style="margin-left:auto">0 agents</span>
     </div>
+
     <div class="card" style="padding:12px;margin:12px 0">
       <h4 style="margin:0 0 8px 0">A. Roster & Availability</h4>
       <div class="muted" style="margin-bottom:6px">
@@ -151,6 +186,7 @@
         </table>
       </div>
     </div>
+
     <div class="card" style="padding:12px;margin:12px 0">
       <h4 style="margin:0 0 8px 0">B. Skills Matrix (opt-out per task)</h4>
       <div class="muted" style="margin-bottom:6px">
@@ -291,7 +327,7 @@
 
 <!-- Entrée modules -->
 <script type="module" src="./assets/js/main.js"></script>
+<!-- AJOUT: script Agents (Supabase) -->
+<script type="module" src="./assets/js/agents.js" defer></script>
 </body>
 </html>
-
-
