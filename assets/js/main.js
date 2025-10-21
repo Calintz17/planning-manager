@@ -1,4 +1,5 @@
 // assets/js/main.js
+import { initAttendance } from './attendance.js';
 import { ROMAN, wireTabs, setActiveTab, saveState, loadState, resetAll } from './store.js';
 import { initAuthUI } from './auth.js';        // <-- AJOUT B5
 import { initPlanning } from './planning.js';
