@@ -82,4 +82,11 @@ thead th{background:#fafafa;text-align:left;border-top:none;position:sticky;top:
   max-height: none !important;
   overflow: visible !important;
 }
+/* -- Mobile: tighten table padding for Regulations tab -- */
+@media (max-width: 768px){
+  #tab-Regulations table th,
+  #tab-Regulations table td {
+    padding: 6px 8px;
+  }
+}
 
