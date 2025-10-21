@@ -32,11 +32,12 @@ async function lazyLoadForTab(name){
       (m.initPlanning || m.default || (()=>{}))();
       return;
     }
-    if (name === 'Agents') {
-      const m = await import('./agents.js').catch(()=> ({}));
-      (m.initAgents || m.default || (()=>{}))();
-      return;
-    }
+// Agents tab: load our new UI file and call its init
+if (name === 'Agents') {
+  const m = await import('./agents-ui.js').catch(()=> ({}));
+  (m.initAgentsUI || m.default || (()=>{}))();
+  return;
+}
     if (name === 'Tasks') {
       const m = await import('./tasks.js').catch(()=> ({}));
       (m.initTasks || m.default || (()=>{}))();
