@@ -1,80 +1,72 @@
 // assets/js/main.js
-// Routeur d’onglets + initialisations paresseuses (lazy) de chaque vue
-
 import { ROMAN } from './store.js';
-import { initPlanning } from './planning.js';
-import { initAttendance } from './attendance.js';
+import { initAttendance } from './attendance.js'; // we know this one exists
 
-// Si tu as modularisé ces vues, garde-les. Sinon, laisse-les commentées.
-import { initAgents } from './agents.js';
-import { initTasks } from './tasks.js';
-import { initForecast } from './forecast.js';
-import { initRegulations } from './regulations.js';
-
-// --- petit helper pour compat avec tes anciennes fonctions de header ---
-function callIf(fnA, fnB){ return typeof fnA === 'function' ? fnA : (typeof fnB === 'function' ? fnB : null); }
-const SAVE   = callIf(ROMAN?.saveState, ROMAN?.save);
-const LOAD   = callIf(ROMAN?.loadState, ROMAN?.load);
-const RESET  = callIf(ROMAN?.resetAll, ROMAN?.reset);
-
-// État d’init pour éviter de ré-initialiser une vue à chaque clic d’onglet
-const initDone = {
-  Attendance: false,
-  Landing:    false,
-  Agents:     false,
-  Tasks:      false,
-  Forecast:   false,
-  Regulations:false,
-};
-
-// Router d’onglets —> affiche le contenu et lance l’init de la vue la 1ʳᵉ fois
+// --- Tabs wiring ------------------------------------------------------------
 function setActiveTab(name){
-  // visuel onglets
+  // toggle active class on buttons
   document.querySelectorAll('.tab').forEach(b=>{
     b.classList.toggle('active', b.dataset.tab===name);
   });
-  // montrer/cacher sections
+
+  // show/hide sections
   ['Attendance','Landing','Agents','Tasks','Forecast','Regulations'].forEach(id=>{
     const el = document.getElementById('tab-'+id);
     if (el) el.style.display = (id===name ? 'block' : 'none');
   });
 
-  // init paresseuse de la vue demandée
-  if (name==='Attendance' && !initDone.Attendance){ initAttendance(); initDone.Attendance = true; }
-  if (name==='Landing'    && !initDone.Landing){    initPlanning();  initDone.Landing    = true; }
-  if (name==='Agents'     && !initDone.Agents){     initAgents?.();  initDone.Agents     = true; }
-  if (name==='Tasks'      && !initDone.Tasks){      initTasks?.();   initDone.Tasks      = true; }
-  if (name==='Forecast'   && !initDone.Forecast){   initForecast?.();initDone.Forecast   = true; }
-  if (name==='Regulations'&& !initDone.Regulations){initRegulations?.();initDone.Regulations = true; }
+  // lazy-load the JS for the selected tab (no hard requirement on exports)
+  lazyLoadForTab(name);
 }
 
-// Câblage des boutons d’onglets
+async function lazyLoadForTab(name){
+  try{
+    if (name === 'Attendance') {
+      // direct call – attendance.js exports initAttendance
+      initAttendance();
+      return;
+    }
+    if (name === 'Landing') {
+      const m = await import('./planning.js').catch(()=> ({}));
+      // call if provided; ignore otherwise
+      (m.initPlanning || m.default || (()=>{}))();
+      return;
+    }
+    if (name === 'Agents') {
+      const m = await import('./agents.js').catch(()=> ({}));
+      (m.initAgents || m.default || (()=>{}))();
+      return;
+    }
+    if (name === 'Tasks') {
+      const m = await import('./tasks.js').catch(()=> ({}));
+      (m.initTasks || m.default || (()=>{}))();
+      return;
+    }
+    if (name === 'Forecast') {
+      const m = await import('./forecast.js').catch(()=> ({}));
+      (m.initForecast || m.default || (()=>{}))();
+      return;
+    }
+    if (name === 'Regulations') {
+      const m = await import('./regulations.js').catch(()=> ({}));
+      (m.initRegulations || m.default || (()=>{}))();
+      return;
+    }
+  } catch (e){
+    console.warn(`[main] lazyLoadForTab(${name}) error:`, e);
+  }
+}
+
+// --- Hook up tab buttons ----------------------------------------------------
 function wireTabs(){
   document.querySelectorAll('.tab').forEach(btn=>{
     btn.addEventListener('click', ()=> setActiveTab(btn.dataset.tab));
   });
 }
 
-// Boutons d’en-tête (Save / Load / Reset)
-function wireHeader(){
-  const elSave  = document.getElementById('btnSave');
-  const elLoad  = document.getElementById('btnLoad');
-  const elReset = document.getElementById('btnResetAll');
-
-  elSave ?.addEventListener('click', ()=> SAVE  && SAVE());
-  elLoad ?.addEventListener('click', ()=> LOAD  && LOAD());
-  elReset?.addEventListener('click', ()=> RESET && RESET());
-}
-
-// --------- Démarrage ---------
-document.addEventListener('DOMContentLoaded', ()=>{
-  wireHeader();
+// --- Boot -------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
   wireTabs();
-
-  // 👉 ouvre l’onglet Attendance au chargement
+  // Make Attendance the landing page
   setActiveTab('Attendance');
 });
-
-// Exporte setActiveTab si tu veux pouvoir le réutiliser ailleurs
-export { setActiveTab };
-
