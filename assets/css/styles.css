@@ -77,3 +77,9 @@ thead th{background:#fafafa;text-align:left;border-top:none;position:sticky;top:
 /* --- Fix Forecast wide tables: enable horizontal scroll --- */
 .scroll { overflow: auto; }            /* s'assure du scroll X/Y */
 #fcTaskSplit { width: max-content; }   /* le tableau peut s'élargir, le parent scroll */
+/* Regulations: remove inner scroll, let the whole page scroll */
+#tab-Regulations .scroll {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
