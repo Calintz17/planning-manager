@@ -1,178 +1,222 @@
 // assets/js/regulations.js
-// Onglet "Regulations" : catalogue de règles par région (CRUD simple + export)
+import { supabase } from './supabase.js';
 import { ROMAN } from './store.js';
 
 const REGIONS = ['Europe','Americas','Greater China','Japan','South Korea','SEAO'];
 
-// Règles par défaut (clonées pour chaque région)
-const BASE_DEFAULTS = [
-  { rule:'Max Hours per Day', value:'8',    notes:'Standard local limit' },
-  { rule:'Max Hours per Week', value:'37.5', notes:'Contract weekly limit' },
-  { rule:'Legal Max (Exceptional)', value:'48', notes:'Only with special agreements' },
-  { rule:'Average Weekly Max (12 weeks)', value:'44', notes:'Rolling average' },
-  { rule:'Min Break per Day', value:'1.5',  notes:'In hours; can be split' },
-  { rule:'Max Consecutive Work Hours', value:'6', notes:'Break required after 6h continuous work' },
-  { rule:'Min Rest Between Shifts', value:'11', notes:'Hours between end and next start' },
-  { rule:'Weekly Rest', value:'24',        notes:'Continuous hours per week' },
-  { rule:'Sunday Work', value:'Restricted', notes:'Allowed only with contract exceptions' },
-  { rule:'Night Work', value:'22:00–06:00', notes:'Extra rules may apply' },
-  { rule:'Lunch Window', value:'12:00–14:00', notes:'Auto-lunch 60 min within the window' }
-];
+let currentRegion = 'Europe';
+let rows = []; // {id, region, rule_key, label, value, notes, enabled, sort_index}
+let savingTimer = null;
 
-function seedDefaults(){
-  const arr = [];
-  for (const region of REGIONS){
-    for (const base of BASE_DEFAULTS){
-      arr.push({
-        id: 'rg_'+Math.random().toString(36).slice(2,8),
-        region,
-        rule: base.rule,
-        value: base.value,
-        notes: base.notes,
-        enabled: true
-      });
-    }
-  }
-  return arr;
-}
-
-function ensureStore(){
-  const S = ROMAN.store;
-  if (!Array.isArray(S.regulations) || !S.regulations.length){
-    S.regulations = seedDefaults();
-  }
-}
-
-function el(tag, attrs={}, html){
+function q(sel){ return document.querySelector(sel); }
+function el(tag, props={}, html){
   const e = document.createElement(tag);
-  for (const k in attrs) e.setAttribute(k, attrs[k]);
-  if (html !== undefined) e.innerHTML = html;
+  Object.entries(props).forEach(([k,v])=> e.setAttribute(k, v));
+  if (html!==undefined) e.innerHTML = html;
   return e;
 }
 
-/* ---------- RENDER ---------- */
-function render(){
-  ensureStore();
-  const S = ROMAN.store;
-  const tbody = document.querySelector('#rgTable tbody');
-  if (!tbody) return;
+async function loadRegion(region){
+  currentRegion = region;
+  // Lire en DB
+  const { data, error } = await supabase
+    .from('regulations')
+    .select('id,region,rule_key,label,value,notes,enabled,sort_index')
+    .eq('region', region)
+    .order('sort_index', { ascending:true });
+  if (error) { console.error('[regulations] load error', error); rows=[]; render(); return; }
 
-  const regionFilter = document.getElementById('rgFilter')?.value || 'ALL';
-  const rows = S.regulations.filter(r => regionFilter==='ALL' ? true : r.region === regionFilter);
+  rows = data || [];
+  render();
+}
+
+function saveSoon(){
+  clearTimeout(savingTimer);
+  savingTimer = setTimeout(()=> saveAllChangesForRegion(), 400);
+}
+
+async function saveAllChangesForRegion(){
+  if (!rows.length) return;
+  // upsert de toutes les lignes de la région courante
+  const payload = rows.map(r=>({
+    id: r.id || undefined,
+    region: currentRegion,
+    rule_key: r.rule_key,
+    label: r.label,
+    value: String(r.value ?? ''),
+    notes: r.notes ?? '',
+    enabled: !!r.enabled,
+    sort_index: r.sort_index ?? 0
+  }));
+  const { data, error } = await supabase.from('regulations').upsert(payload).select('id,rule_key');
+  if (error) console.error('[regulations] upsert error', error);
+}
+
+async function deleteRow(r){
+  if (!r?.id) {
+    // ligne locale non encore en DB : juste l’enlever
+    rows = rows.filter(x => x !== r);
+    render();
+    return;
+  }
+  const { error } = await supabase.from('regulations').delete().eq('id', r.id);
+  if (error) { console.error('[regulations] delete error', error); return; }
+  rows = rows.filter(x => x.id !== r.id);
+  render();
+}
+
+function render(){
+  const tbody = q('#rgTable tbody');
+  const count = q('#rgCount');
+  if (!tbody) return;
 
   tbody.innerHTML = '';
   const frag = document.createDocumentFragment();
 
-  rows.forEach((r)=>{
+  rows.forEach((r, idx)=>{
     const tr = el('tr');
 
-    // Rule
+    // Rule (label)
     const tdRule = el('td');
-    const inpRule = el('input', { class:'input', value:r.rule });
-    inpRule.addEventListener('input', ()=> r.rule = inpRule.value);
-    tdRule.appendChild(inpRule); tr.appendChild(tdRule);
-
-    // Region
-    const tdRegion = el('td');
-    const selRegion = el('select', { class:'input' });
-    REGIONS.forEach(reg=>{
-      const opt = el('option'); opt.value = reg; opt.textContent = reg; if(reg===r.region) opt.selected = true;
-      selRegion.appendChild(opt);
+    const inpRule = el('input', { class:'input', value:r.label });
+    inpRule.addEventListener('input', ()=>{
+      r.label = inpRule.value;
+      // si pas de key personnalisée, dérive depuis le label
+      r.rule_key ||= slugKeyFromLabel(inpRule.value);
+      saveSoon();
     });
-    selRegion.addEventListener('change', ()=> r.region = selRegion.value);
-    tdRegion.appendChild(selRegion); tr.appendChild(tdRegion);
+    tdRule.appendChild(inpRule);
+    tr.appendChild(tdRule);
 
     // Value
-    const tdValue = el('td');
-    const inpVal = el('input', { class:'input mono', value:String(r.value) });
-    inpVal.addEventListener('input', ()=> r.value = inpVal.value);
-    tdValue.appendChild(inpVal); tr.appendChild(tdValue);
+    const tdVal = el('td');
+    const inpVal = el('input', { class:'input mono', value:String(r.value ?? '') });
+    inpVal.addEventListener('input', ()=>{
+      r.value = inpVal.value;
+      saveSoon();
+    });
+    tdVal.appendChild(inpVal);
+    tr.appendChild(tdVal);
 
     // Notes
     const tdNotes = el('td');
-    const inpNotes = el('input', { class:'input', value:r.notes||'' });
-    inpNotes.addEventListener('input', ()=> r.notes = inpNotes.value);
-    tdNotes.appendChild(inpNotes); tr.appendChild(tdNotes);
+    const inpNotes = el('input', { class:'input', value: r.notes || '' });
+    inpNotes.addEventListener('input', ()=>{
+      r.notes = inpNotes.value;
+      saveSoon();
+    });
+    tdNotes.appendChild(inpNotes);
+    tr.appendChild(tdNotes);
 
     // Enabled
-    const tdEnabled = el('td', { class:'mono' });
-    const chk = el('input', { type:'checkbox' }); chk.checked = !!r.enabled;
-    chk.addEventListener('change', ()=> r.enabled = chk.checked);
-    tdEnabled.appendChild(chk); tr.appendChild(tdEnabled);
+    const tdEn = el('td', { class:'mono' });
+    const chk = el('input', { type:'checkbox' });
+    chk.checked = !!r.enabled;
+    chk.addEventListener('change', ()=>{
+      r.enabled = chk.checked;
+      saveSoon();
+    });
+    tdEn.appendChild(chk);
+    tr.appendChild(tdEn);
 
     // Delete
     const tdDel = el('td');
-    const bDel = el('button', { class:'btn ghost' }, 'Delete');
-    bDel.addEventListener('click', ()=>{
-      const pos = S.regulations.indexOf(r);
-      if (pos>-1) S.regulations.splice(pos,1);
-      render(); updateCount();
-    });
-    tdDel.appendChild(bDel); tr.appendChild(tdDel);
+    const btnDel = el('button', { class:'btn ghost' }, 'Delete');
+    btnDel.addEventListener('click', ()=> deleteRow(r));
+    tdDel.appendChild(btnDel);
+    tr.appendChild(tdDel);
 
     frag.appendChild(tr);
   });
 
   tbody.appendChild(frag);
-  updateCount();
+  if (count) count.textContent = `${rows.length} rules`;
 }
 
-function updateCount(){
-  const badge = document.getElementById('rgCount');
-  if (badge) badge.textContent = `${ROMAN.store.regulations.length} rules`;
+function slugKeyFromLabel(s){
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,'_')
+    .replace(/^_+|_+$/g,'')
+    .slice(0,60) || 'rule_' + Math.random().toString(36).slice(2,8);
 }
 
-/* ---------- ACTIONS ---------- */
-function addRule(){
-  const S = ROMAN.store;
-  const region = document.getElementById('rgFilter')?.value;
-  S.regulations.push({
-    id: 'rg_'+Math.random().toString(36).slice(2,8),
-    region: (region && region!=='ALL') ? region : 'Europe',
-    rule: 'New rule',
+async function addRule(){
+  const maxSort = rows.reduce((m, r)=> Math.max(m, r.sort_index||0), 0);
+  const r = {
+    id: undefined,
+    region: currentRegion,
+    rule_key: 'custom_' + Math.random().toString(36).slice(2,8),
+    label: 'New rule',
     value: '',
     notes: '',
-    enabled: true
-  });
+    enabled: true,
+    sort_index: maxSort + 10
+  };
+  rows.push(r);
   render();
-}
-
-function resetDefaults(){
-  ROMAN.store.regulations = seedDefaults();
-  const sel = document.getElementById('rgFilter');
-  if (sel) sel.value = 'ALL';
-  render();
+  saveSoon();
 }
 
 function exportCSV(){
-  const lines = ['region,rule,value,enabled,notes'];
-  for (const r of ROMAN.store.regulations){
+  const headers = ['region','rule_key','label','value','enabled','notes','sort_index'];
+  const lines = [headers.join(',')];
+  rows.forEach(r=>{
     lines.push([
-      JSON.stringify(r.region),
-      JSON.stringify(r.rule),
-      JSON.stringify(r.value),
-      r.enabled ? '1' : '0',
-      JSON.stringify(r.notes||'')
+      JSON.stringify(currentRegion),
+      JSON.stringify(r.rule_key),
+      JSON.stringify(r.label),
+      JSON.stringify(String(r.value ?? '')),
+      r.enabled ? '1':'0',
+      JSON.stringify(r.notes ?? ''),
+      r.sort_index ?? 0
     ].join(','));
-  }
+  });
   const blob = new Blob([lines.join('\n')], {type:'text/csv'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'roman-regulations.csv';
+  a.download = `roman-regulations-${currentRegion}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
-/* ---------- PUBLIC API ---------- */
-export function initRegulations(){
-  ensureStore();
+function wire(){
+  // filtre région (on réutilise #rgFilter déjà dans ton HTML)
+  const sel = q('#rgFilter');
+  if (sel){
+    // s'assurer que les options sont bonnes
+    sel.innerHTML = '<option value="ALL" disabled>All regions (view only)</option>' + 
+      REGIONS.map(r=>`<option value="${r}">${r}</option>`).join('');
+    sel.value = ROMAN.store.region || 'Europe';
+    sel.addEventListener('change', ()=>{
+      const wanted = sel.value || 'Europe';
+      ROMAN.store.region = wanted;
+      loadRegion(wanted);
+    });
+  }
 
-  // Wire boutons
-  document.getElementById('rgAdd')?.addEventListener('click', addRule);
-  document.getElementById('rgReset')?.addEventListener('click', resetDefaults);
-  document.getElementById('rgExport')?.addEventListener('click', exportCSV);
-  document.getElementById('rgFilter')?.addEventListener('change', render);
-
-  // Premier rendu
-  render();
+  // boutons
+  q('#rgAdd')   ?.addEventListener('click', addRule);
+  q('#rgReset') ?.addEventListener('click', async ()=>{
+    // recharge DB (les seeds ont déjà été créées ; ici on rappelle juste loadRegion)
+    await loadRegion(currentRegion);
+  });
+  q('#rgExport')?.addEventListener('click', exportCSV);
 }
+
+export async function initRegulations(){
+  // Adapter l’en-tête du tableau pour n’avoir qu’une seule grille compacte
+  const head = document.querySelector('#rgTable thead tr');
+  if (head){
+    head.innerHTML = `
+      <th style="width:28%">Rule</th>
+      <th style="width:18%">Value</th>
+      <th style="width:34%">Notes</th>
+      <th style="width:12%">Enabled</th>
+      <th style="width:8%"></th>`;
+  }
+  wire();
+  const startRegion = ROMAN.store.region || 'Europe';
+  await loadRegion(startRegion);
+}
+
